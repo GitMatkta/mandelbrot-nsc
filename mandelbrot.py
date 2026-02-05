@@ -1,9 +1,9 @@
 from doctest import Example
 
 
-Mandelbrot Set Generator
-Author : [ Magnus ]
-Course : Numerical Scientific Computing 2026
+#Mandelbrot Set Generator
+#Author : [ Magnus ]
+#Course : Numerical Scientific Computing 2026
 
 def f(x):
     
