@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from doctest import Example
-
+import time
 
 #Mandelbrot Set Generator
 #Author : [ Me ]
@@ -11,6 +11,9 @@ from doctest import Example
     
     #Example function .
     #Parameters
+
+start = time.time()
+
 
 mandlebrotArray = []
 
@@ -49,13 +52,17 @@ def mandlebrotpoint(c, max_iter):
     else:
         return max_iter
 
-mandlebrotarray = mandlebrot(max_iter)
+mandlebrotArray = mandlebrot(max_iter)
 
     # print(mandlebrot(0+0j, 100))
     # print(mandlebrot(2+2j, 100))
 #print(mandlebrotArray.shape)
 
-plt.imshow(mandlebrotarray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
+result = mandlebrotArray
+elapsed = time.time() - start
+print(f"Execution time: {elapsed:.2f} seconds")
+
+plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
 plt.colorbar()
 plt.title('Mandelbrot Set')
 plt.show()
