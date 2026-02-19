@@ -29,15 +29,14 @@ bound = 2
 
 
 def mandlebrotIsolated(max_iter):
-    mandlebrotArray = np.array([])
+    #mandlebrotArray = np.array([])
     x_values = np.linspace(x_min, x_max, hight)
     y_values = np.linspace(y_min, y_max, width)
-    x_values, y_values = np.meshgrid(x_values, y_values)
-    c = x_values + 1j * y_values
+    X_values, Y_values = np.meshgrid(x_values, y_values)
     #print (f" Shape : {c. shape }") # (1024 , 1024)
     #print (f" Type : {c. dtype }") # complex128
 
-    c = x_values + 1j * y_values
+    c = X_values + 1j * Y_values
     z = np.zeros_like(c)
     m = np.zeros_like(c, dtype=int)
     for n in range(max_iter):
