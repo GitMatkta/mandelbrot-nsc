@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from doctest import Example
 import time
+import statistics
 
 #Mandelbrot Set Generator
 #Author : [ Me ]
@@ -26,6 +27,7 @@ power = 2
 bound = 2
 
 
+
 def mandlebrotIsolated(max_iter):
     mandlebrotArray = np.array([])
     x_values = np.linspace(x_min, x_max, hight)
@@ -44,14 +46,27 @@ def mandlebrotIsolated(max_iter):
         m[mask] += 1
     return m
 
+def benchmark ( function, max_iter = max_iter , n_runs =3) :
+#""" Time func , return median of n_runs . """
+    times = []
+    for _ in range ( n_runs ):
+        t0 = time . perf_counter ()
+        result = function(max_iter)
+        times.append ( time.perf_counter () - t0 )
+    median_t = statistics.median ( times )
+    print (f" Median : {median_t :.4f}s "f"( min ={ min( times ):.4f}, max ={ max( times ):.4f})")
+    return median_t, result
+
+t , M = benchmark ( mandlebrotIsolated, 100)
+
 mandlebrotArray = mandlebrotIsolated(max_iter)
 
-result = mandlebrotArray
-elapsed = time.time() - start
-print(f"Execution time: {elapsed:.2f} seconds")
+#result = mandlebrotArray
+#elapsed = time.time() - start
+#print(f"Execution time: {elapsed:.2f} seconds")
 
-plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
-plt.colorbar()
-plt.title('Mandelbrot Set')
-plt.show()
-plt.savefig('mandelbrot.png')
+# plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
+# plt.colorbar()
+# plt.title('Mandelbrot Set')
+# plt.show()
+# plt.savefig('mandelbrot.png')
