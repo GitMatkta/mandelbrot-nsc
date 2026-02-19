@@ -15,8 +15,6 @@ import time
 start = time.time()
 
 
-
-
 x_min = -2
 x_max = 1
 y_min = -1.5
@@ -34,8 +32,26 @@ def mandlebrotIsolated(max_iter):
     y_values = np.linspace(y_min, y_max, width)
     x_values, y_values = np.meshgrid(x_values, y_values)
     c = x_values + 1j * y_values
-    print (f" Shape : {c. shape }") # (1024 , 1024)
-    print (f" Type : {c. dtype }") # complex128
+    #print (f" Shape : {c. shape }") # (1024 , 1024)
+    #print (f" Type : {c. dtype }") # complex128
 
+    c = x_values + 1j * y_values
+    z = np.zeros_like(c)
+    m = np.zeros_like(c, dtype=int)
+    for n in range(max_iter):
+        mask = np.abs(z) <= bound
+        z[mask] = z[mask]**power + c[mask]
+        m[mask] += 1
+    return m
 
-mandlebrotIsolated(max_iter)
+mandlebrotArray = mandlebrotIsolated(max_iter)
+
+result = mandlebrotArray
+elapsed = time.time() - start
+print(f"Execution time: {elapsed:.2f} seconds")
+
+plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
+plt.colorbar()
+plt.title('Mandelbrot Set')
+plt.show()
+plt.savefig('mandelbrot.png')
