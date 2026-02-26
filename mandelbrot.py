@@ -1,7 +1,9 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from doctest import Example
 import time
+import line_profiler
 
 #Mandelbrot Set Generator
 #Author : [ Me ]
@@ -18,18 +20,20 @@ import time
 #time at 1024x1024 : 4.37 seconds
 #time at 2048x2048 : 17.46 seconds
 
+#line: kernprof -l -v mandelbrot.py
+os.environ['LINE_PROFILE'] = '1'
 
 x_min = -2
 x_max = 1
 y_min = -1.5
 y_max = 1.5
-hight = 2048
-width = 2048
+hight = 512
+width = 512
 max_iter = 100
 power = 2
 bound = 2
 
-
+@line_profiler.profile
 def mandlebrot(max_iter):
     mandlebrotArray = []
     x_values = np.linspace(x_min, x_max, hight)
@@ -47,7 +51,7 @@ def mandlebrot(max_iter):
 
     return mandlebrotArray
 
-
+@line_profiler.profile
 def mandlebrotpoint(c, max_iter):
     z = 0
     for n in range(max_iter):
