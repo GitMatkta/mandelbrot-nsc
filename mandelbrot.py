@@ -12,25 +12,30 @@ import time
     #Example function .
     #Parameters
 
-start = time.time()
 
 
-mandlebrotArray = []
+#time at 512x512 : 1.14 seconds
+#time at 1024x1024 : 4.37 seconds
+#time at 2048x2048 : 17.46 seconds
 
-x_min = (-2)
-x_max = (1)
-y_min = (-1.5)
-y_max = (1.5)
-hight = 1024
-width = 1024
+
+x_min = -2
+x_max = 1
+y_min = -1.5
+y_max = 1.5
+hight = 2048
+width = 2048
 max_iter = 100
 power = 2
 bound = 2
 
 
 def mandlebrot(max_iter):
+    mandlebrotArray = []
     x_values = np.linspace(x_min, x_max, hight)
     y_values = np.linspace(y_min, y_max, width)
+   #x_values, y_values = np.meshgrid(x_values, y_values)
+    #c = x_values + 1j * y_values
 
     for y in y_values:
         row = []
@@ -52,6 +57,7 @@ def mandlebrotpoint(c, max_iter):
     else:
         return max_iter
 
+start = time.time()
 mandlebrotArray = mandlebrot(max_iter)
 
     # print(mandlebrot(0+0j, 100))
