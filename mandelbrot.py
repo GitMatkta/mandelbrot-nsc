@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from doctest import Example
 import time
 import line_profiler
-
+from numba import njit
+import statistics
 #Mandelbrot Set Generator
 #Author : [ Me ]
 #Course : Numerical Scientific Computing 2026
@@ -27,13 +28,14 @@ x_min = -2
 x_max = 1
 y_min = -1.5
 y_max = 1.5
-hight = 512
-width = 512
+hight = 1024
+width = 1024
 max_iter = 100
 power = 2
 bound = 2
 
-@line_profiler.profile
+#@line_profiler.profile
+@njit
 def mandlebrot(max_iter):
     mandlebrotArray = []
     x_values = np.linspace(x_min, x_max, hight)
@@ -51,7 +53,8 @@ def mandlebrot(max_iter):
 
     return mandlebrotArray
 
-@line_profiler.profile
+#@line_profiler.profile
+@njit
 def mandlebrotpoint(c, max_iter):
     z = 0
     for n in range(max_iter):
@@ -61,22 +64,39 @@ def mandlebrotpoint(c, max_iter):
     else:
         return max_iter
 
-start = time.time()
-mandlebrotArray = mandlebrot(max_iter)
+#start = time.time()
+#mandlebrotArray = mandlebrot(max_iter)
+
+def test_numba_mandelbrot_grid():
+    start_time = time.perf_counter()
+    mandelbrot_array = mandlebrot(max_iter)
+    test_time = time.perf_counter() - start_time
+    print(f'Computation took {test_time:.5f} seconds!')
+    return test_time
+
+num_samples = 5
+test_times = []
+
+for sample in range(num_samples):
+    test_time = test_numba_mandelbrot_grid()
+    test_times.append(test_time)
+
+numba_median_time = statistics.median(test_times)
+print(f'Median computation time: {numba_median_time:.5f} seconds!')
 
     # print(mandlebrot(0+0j, 100))
     # print(mandlebrot(2+2j, 100))
 #print(mandlebrotArray.shape)
 
-result = mandlebrotArray
-elapsed = time.time() - start
-print(f"Execution time: {elapsed:.2f} seconds")
+# result = mandlebrotArray
+# elapsed = time.time() - start
+# print(f"Execution time: {elapsed:.2f} seconds")
 
-plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
-plt.colorbar()
-plt.title('Mandelbrot Set')
-plt.show()
-plt.savefig('mandelbrot.png')
+# plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
+# plt.colorbar()
+# plt.title('Mandelbrot Set')
+# plt.show()
+# plt.savefig('mandelbrot.png')
 
 # print
     # TODO : Implement the algorithm
