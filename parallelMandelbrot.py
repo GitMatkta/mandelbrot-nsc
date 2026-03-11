@@ -81,24 +81,24 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter, n_workers=4):
 
 if __name__ == '__main__':
     # Warm up serial first
-    mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+    #mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
 
-    def test_numba_mandelbrot_grid(): #test code
-        start_time = time.perf_counter()
-        mandelbrot_array = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
-        test_time = time.perf_counter() - start_time
-        print(f'Computation took {test_time:.5f} seconds!')
-        return test_time
+    # def test_numba_mandelbrot_grid(): #test code
+    #     start_time = time.perf_counter()
+    #     mandelbrot_array = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+    #     test_time = time.perf_counter() - start_time
+    #     print(f'Computation took {test_time:.5f} seconds!')
+    #     return test_time
 
-    num_samples = 5
-    test_times = []
+    # num_samples = 5
+    # test_times = []
 
-    for sample in range(num_samples):
-        test_time = test_numba_mandelbrot_grid()
-        test_times.append(test_time)
+    # for sample in range(num_samples):
+    #     test_time = test_numba_mandelbrot_grid()
+    #     test_times.append(test_time)
 
-    numba_median_time = statistics.median(test_times)
-    print(f'Median computation time: {numba_median_time:.5f} seconds!')
+    # numba_median_time = statistics.median(test_times)
+    # print(f'Median computation time: {numba_median_time:.5f} seconds!')
 
     result = mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter,n_workers=4) #actual run
 
@@ -109,6 +109,33 @@ if __name__ == '__main__':
     out = Path(__file__).parent / 'mandelbrot_parallel.png'
     fig.savefig(out, dpi=150)
     print(f'Saved: {out}')
+
+
+# Serial baseline (Numba already warm after M1 warm-up)
+    times = []
+    for _ in range(3):
+            t0 = time.perf_counter()
+            mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+            times.append(time.perf_counter() - t0)
+    t_serial = statistics.median(times)
+
+    for n_workers in range(1, os.cpu_count() + 1):
+        chunk_size = max(1, N // n_workers)
+        chunks, row = [], 0
+        while row < N:
+            end = min(row + chunk_size, N)
+            chunks.append((row, end, N, x_min, x_max, y_min, y_max, max_iter))
+            row = end
+        with Pool(processes=n_workers) as pool:
+            pool.map(_worker, chunks) # warm-up: Numba JIT in all workers
+            times = []
+            for _ in range(3):
+                t0 = time.perf_counter()
+                np.vstack(pool.map(_worker, chunks))
+                times.append(time.perf_counter() - t0)
+        t_par = statistics.median(times)
+        speedup = t_serial / t_par
+        print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
 # plt.imshow(grid, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
 # plt.colorbar()
 # plt.title('Mandelbrot Set')
