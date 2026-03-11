@@ -6,6 +6,9 @@ import time
 import line_profiler
 from numba import njit
 import statistics
+from multiprocessing import Pool
+from pathlib import Path
+
 
 #parralell version
 
@@ -43,40 +46,69 @@ def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter
     """Compute mandelbrot for rows [row_start, row_end). 
     Derives pixel coordinates from index + bounds — no arrays received as input.
     Returns a (row_end - row_start) x N int32 array."""
-    result = np.zeros((row_end - row_start, N), dtype=np.int32)
+    out = np.zeros((row_end - row_start, N), dtype=np.int32)
     dx = (x_max - x_min) / N
     dy = (y_max - y_min) / N
-    for row in range(row_start, row_end):
-        c_imag = y_min + (row + row_start) * dy
+    for r in range(row_end - row_start):
+        c_imag = y_min + (r + row_start) * dy
         for col in range(N):
-            result[row, col] = mandelbrot_pixel(x_min + col*dx, c_imag, max_iter)
-    return result
+            out[r, col] = mandelbrot_pixel(x_min + col*dx, c_imag, max_iter)
+    return out
 
 def mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter):
     """Thin wrapper: computes the whole grid as one chunk."""
     return mandelbrot_chunk(0, N, N, x_min, x_max, y_min, y_max, max_iter)
 
 
-grid = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+#grid = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter) #leftover
 
-def test_numba_mandelbrot_grid():
-    start_time = time.perf_counter()
-    mandelbrot_array = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
-    test_time = time.perf_counter() - start_time
-    print(f'Computation took {test_time:.5f} seconds!')
-    return test_time
+def _worker(args):
+    return mandelbrot_chunk(*args)
 
-num_samples = 5
-test_times = []
+def mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter, n_workers=4):
+    chunk_size = max(1, N// n_workers)
+    chunks, row =[], 0
+    while row < N:
+        row_end = min(row + chunk_size, N)
+        chunks.append((row, row_end, N, x_min, x_max, y_min, y_max, max_iter))
+        row = row_end
 
-for sample in range(num_samples):
-    test_time = test_numba_mandelbrot_grid()
-    test_times.append(test_time)
+    with Pool(processes=n_workers) as pool:
+        pool.map(_worker, chunks)
+        parts = pool.map(_worker, chunks)
 
-numba_median_time = statistics.median(test_times)
-print(f'Median computation time: {numba_median_time:.5f} seconds!')
+    return np.vstack(parts)
 
+if __name__ == '__main__':
+    # Warm up serial first
+    mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
 
+    def test_numba_mandelbrot_grid(): #test code
+        start_time = time.perf_counter()
+        mandelbrot_array = mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter)
+        test_time = time.perf_counter() - start_time
+        print(f'Computation took {test_time:.5f} seconds!')
+        return test_time
+
+    num_samples = 5
+    test_times = []
+
+    for sample in range(num_samples):
+        test_time = test_numba_mandelbrot_grid()
+        test_times.append(test_time)
+
+    numba_median_time = statistics.median(test_times)
+    print(f'Median computation time: {numba_median_time:.5f} seconds!')
+
+    result = mandelbrot_parallel(N, x_min, x_max, y_min, y_max, max_iter,n_workers=4) #actual run
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.imshow(result, extent = [x_min, x_max, y_min, y_max], cmap='inferno', origin ='lower', aspect='equal')
+    ax.set_xlabel('Re(c)')
+    ax.set_ylabel('Im(c)')
+    out = Path(__file__).parent / 'mandelbrot_parallel.png'
+    fig.savefig(out, dpi=150)
+    print(f'Saved: {out}')
 # plt.imshow(grid, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
 # plt.colorbar()
 # plt.title('Mandelbrot Set')
