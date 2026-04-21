@@ -1,29 +1,18 @@
+"""
+Compute and benchmark a Mandelbrot set grid.
+
+This module generates a 2D grid of Mandelbrot iteration counts
+and measures execution time over multiple runs.
+"""
+
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-from doctest import Example
 import time
-import line_profiler
-from numba import njit
 import statistics
-#Mandelbrot Set Generator
-#Author : [ Me ]
-#Course : Numerical Scientific Computing 2026
 
-#def f(x):
-    
-    #Example function .
-    #Parameters
-
-
-
-#time at 512x512 : 1.14 seconds
-#time at 1024x1024 : 4.37 seconds
-#time at 2048x2048 : 17.46 seconds
-
-#line: kernprof -l -v mandelbrot.py
 os.environ['LINE_PROFILE'] = '1'
 
+""" Bounds of the complex plane """
 x_min = -2
 x_max = 1
 y_min = -1.5
@@ -34,14 +23,24 @@ max_iter = 100
 power = 2
 bound = 2
 
-#@line_profiler.profile
-@njit
+
 def mandlebrot(max_iter):
+    """
+    Generate a Mandelbrot set grid.
+
+    Parameters
+    max_iter : int
+        Maximum number of iterations for each point.
+
+    Returns
+    -------
+    list[list[int]]
+        2D list where each element represents the number of
+        iterations before divergence for that complex point.
+    """
     mandlebrotArray = []
     x_values = np.linspace(x_min, x_max, hight)
     y_values = np.linspace(y_min, y_max, width)
-   #x_values, y_values = np.meshgrid(x_values, y_values)
-    #c = x_values + 1j * y_values
 
     for y in y_values:
         row = []
@@ -53,50 +52,54 @@ def mandlebrot(max_iter):
 
     return mandlebrotArray
 
-#@line_profiler.profile
-@njit
+
 def mandlebrotpoint(c, max_iter):
+    """
+    Compute the Mandelbrot iteration count for a single complex point.
+
+    Parameters
+    ----------
+    c : complex
+        Complex number representing a point in the plane.
+    max_iter : int
+        Maximum number of iterations.
+
+    Returns
+    -------
+    int
+        Number of iterations before divergence, or max_iter if bounded.
+    """
     z = 0
     for n in range(max_iter):
         z = z**power + c
-        if (abs(z) > bound):
+        if abs(z) > bound:
             return n
-    else:
-        return max_iter
+    return max_iter
 
-#start = time.time()
-#mandlebrotArray = mandlebrot(max_iter)
 
 def test_numba_mandelbrot_grid():
+    """
+    Measure execution time of Mandelbrot grid computation.
+
+    Returns
+    -------
+    float
+        Time taken (in seconds) to compute the Mandelbrot grid.
+    """
     start_time = time.perf_counter()
-    mandelbrot_array = mandlebrot(max_iter)
+    mandlebrot(max_iter)
     test_time = time.perf_counter() - start_time
     print(f'Computation took {test_time:.5f} seconds!')
     return test_time
 
+
+# Run benchmark
 num_samples = 5
 test_times = []
 
-for sample in range(num_samples):
+for _ in range(num_samples):
     test_time = test_numba_mandelbrot_grid()
     test_times.append(test_time)
 
 numba_median_time = statistics.median(test_times)
 print(f'Median computation time: {numba_median_time:.5f} seconds!')
-
-    # print(mandlebrot(0+0j, 100))
-    # print(mandlebrot(2+2j, 100))
-#print(mandlebrotArray.shape)
-
-# result = mandlebrotArray
-# elapsed = time.time() - start
-# print(f"Execution time: {elapsed:.2f} seconds")
-
-# plt.imshow(mandlebrotArray, extent=(x_min, x_max, y_min, y_max), cmap='twilight', origin='lower')
-# plt.colorbar()
-# plt.title('Mandelbrot Set')
-# plt.show()
-# plt.savefig('mandelbrot.png')
-
-# print
-    # TODO : Implement the algorithm
